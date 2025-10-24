@@ -4,71 +4,80 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
 import numpy as np
 from PIL import Image
-import cv2
 
-# ==========================
+# ==============================
 # Load Models
-# ==========================
+# ==============================
 @st.cache_resource
 def load_models():
-    # Model YOLO untuk deteksi penyakit kulit
-    yolo_model = YOLO("model/Adila Khairunnisa_Laporan 4.pt")
-
-    # Model klasifikasi Apple vs Tomato
-    classifier = load_model("model/Adila Khairunnisa_Laporan 2.h5", compile=False, safe_mode=True)
+    yolo_model = YOLO("model/apple_tomato.pt")  # deteksi Apple & Tomato
+    classifier = load_model("model/skin_disease.h5", compile=False)
     return yolo_model, classifier
 
 yolo_model, classifier = load_models()
 
-# ==========================
+# ==============================
 # UI
-# ==========================
-st.set_page_config(page_title="AI Detection Dashboard", layout="wide")
-st.title("🧠 AI Detection & Classification Dashboard")
+# ==============================
+st.set_page_config(page_title="Image Analyzer", page_icon="🧠", layout="wide")
+st.title("🧠 Dashboard Deteksi & Klasifikasi Gambar")
 
-menu = st.sidebar.radio("🔍 Pilih Mode Analisis", ["Deteksi Penyakit Kulit (YOLO)", "Klasifikasi Buah (Apple vs Tomato)"])
+menu = st.sidebar.radio("📊 Pilih Mode Analisis", [
+    "Deteksi Buah (Apple & Tomato)",
+    "Klasifikasi Penyakit Kulit"
+])
 
 uploaded_file = st.file_uploader("📤 Unggah Gambar", type=["jpg", "jpeg", "png"])
 
-if uploaded_file is not None:
+if uploaded_file:
     img = Image.open(uploaded_file).convert("RGB")
-    st.image(img, caption="📸 Gambar yang Diupload", use_container_width=True)
+    st.image(img, caption="Gambar Diupload", use_container_width=True)
 
-    if menu == "Deteksi Penyakit Kulit (YOLO)":
-        st.subheader("🧴 Deteksi Penyakit Kulit")
-        st.info("Model YOLO digunakan untuk mendeteksi enam jenis penyakit kulit: Eczema, Acne, Milia, Rosacea, Keratosis, dan Carcinoma.")
+    # ==============================
+    # MODE 1: Deteksi Buah
+    # ==============================
+    if menu == "Deteksi Buah (Apple & Tomato)":
+        st.subheader("🍎 Deteksi Apple & Tomato")
+        with st.spinner("Mendeteksi objek..."):
+            results = yolo_model(img)
+            result_img = results[0].plot()
+        st.image(result_img, caption="Hasil Deteksi", use_container_width=True)
 
-        results = yolo_model(img)
-        result_img = results[0].plot()
-        st.image(result_img, caption="🩺 Hasil Deteksi Penyakit Kulit", use_container_width=True)
-
-        # Tampilkan label hasil deteksi
         detected_classes = list(set([yolo_model.names[int(box.cls)] for box in results[0].boxes]))
         if detected_classes:
-            st.success("✅ Deteksi selesai!")
+            st.success("Deteksi selesai!")
             st.write("**Kelas terdeteksi:**", ", ".join(detected_classes))
         else:
-            st.warning("⚠️ Tidak ada penyakit kulit yang terdeteksi.")
+            st.warning("Tidak ada objek terdeteksi.")
 
-    elif menu == "Klasifikasi Buah (Apple vs Tomato)":
-        st.subheader("🍎 Klasifikasi Buah (Apple vs Tomato)")
-        st.info("Model CNN digunakan untuk mengklasifikasikan gambar ke dalam dua kelas: Apple dan Tomato.")
+    # ==============================
+    # MODE 2: Klasifikasi Penyakit Kulit
+    # ==============================
+    elif menu == "Klasifikasi Penyakit Kulit":
+        st.subheader("🩺 Klasifikasi Jenis Penyakit Kulit")
 
-        # Preprocessing
+        # Preprocessing gambar
         img_resized = img.resize((224, 224))
         img_array = image.img_to_array(img_resized)
         img_array = np.expand_dims(img_array, axis=0) / 255.0
 
-        # Prediksi
-        prediction = classifier.predict(img_array)
-        class_names = ["Apple", "Tomato"]
-        class_index = np.argmax(prediction)
-        confidence = np.max(prediction)
+        with st.spinner("Mengklasifikasi gambar..."):
+            prediction = classifier.predict(img_array)
+            class_index = np.argmax(prediction)
+            confidence = np.max(prediction)
 
-        st.success("✅ Klasifikasi selesai!")
-        st.metric(label="Kelas Prediksi", value=class_names[class_index])
-        st.progress(float(confidence))
-        st.write("**Probabilitas:**", f"{confidence*100:.2f}%")
+        # Label kelas (6 penyakit kulit)
+        labels = ["Eczema", "Acne", "Milia", "Rosacea", "Keratosis", "Carcinoma"]
+        predicted_label = labels[class_index]
+
+        st.success("Klasifikasi selesai!")
+        st.markdown(f"### 🧩 Hasil: **{predicted_label}**")
+        st.write(f"**Probabilitas:** {confidence:.2%}")
+
+        # Menampilkan semua probabilitas kelas
+        st.markdown("#### Distribusi Prediksi:")
+        probs = {labels[i]: float(prediction[0][i]) for i in range(len(labels))}
+        st.bar_chart(probs)
 
 else:
-    st.warning("📁 Silakan unggah gambar terlebih dahulu untuk mulai analisis.")
+    st.info("Silakan unggah gambar terlebih dahulu untuk memulai analisis.")
