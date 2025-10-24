@@ -12,8 +12,8 @@ import cv2
 # ==========================
 @st.cache_resource
 def load_models():
-    yolo_model = YOLO(r"D:\Adila Khairunnisa\S1-Statistika\SEMESTER 7\Pemrograman Big Data\Laprak 5\model\Adila Khairunnisa_Laporan 4.pt")  # Model deteksi objek
-    classifier = load_model(r"D:\Adila Khairunnisa\S1-Statistika\SEMESTER 7\Pemrograman Big Data\Laprak 5\model\Adila_Khairunnisa_Laporan2_reexport.keras", compile=False, safe_mode=True)  # Model klasifikasi
+    yolo_model = YOLO(r"model/Adila Khairunnisa_Laporan 4.pt")  # Model deteksi objek
+    classifier = load_model(r"model/Adila Khairunnisa_Laporan 2.h5", compile=False, safe_mode=True)  # Model klasifikasi
     return yolo_model, classifier
 
 yolo_model, classifier = load_models()
