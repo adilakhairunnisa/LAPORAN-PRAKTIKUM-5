@@ -10,8 +10,8 @@ from PIL import Image
 # ==============================
 @st.cache_resource
 def load_models():
-yolo_model = YOLO("model/Adila Khairunnisa_Laporan 4.pt")
-classifier = load_model("model/Adila Khairunnisa_Laporan 2.h5", compile=False)
+    yolo_model = YOLO("model/Adila Khairunnisa_Laporan 4.pt")
+    classifier = load_model("model/Adila Khairunnisa_Laporan 2.h5", compile=False)
     return yolo_model, classifier
 
 yolo_model, classifier = load_models()
