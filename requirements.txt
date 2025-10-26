@@ -1,5 +1,8 @@
 streamlit
-ultralytics
 tensorflow
+ultralytics
+pillow
 numpy
-Pillow
+opencv-python
+ultralytics
+opencv-python-headless
