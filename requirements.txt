@@ -3,4 +3,4 @@ tensorflow==2.15.0
 ultralytics==8.2.81
 pillow
 numpy
-opencv-python-headless
+opencv-python-headless==4.8.1.78
