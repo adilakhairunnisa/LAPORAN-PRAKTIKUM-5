@@ -1,5 +1,10 @@
 import os
-os.system("apt-get update -y && apt-get install -y libgl1 libglib2.0-0 > /dev/null 2>&1")
+os.environ["OPENCV_VIDEOIO_PRIORITY_MSMF"] = "0"
+os.system("apt-get update -y && apt-get install -y libgl1-mesa-glx libglib2.0-0 > /dev/null")
+
+import cv2
+cv2.setNumThreads(0)
+cv2.ocl.setUseOpenCL(False)
 
 import streamlit as st
 from ultralytics import YOLO
