@@ -1,7 +1,17 @@
 import os
-os.environ["OPENCV_VIDEOIO_PRIORITY_MSMF"] = "0"
-os.system("apt-get update -y && apt-get install -y libgl1-mesa-glx libglib2.0-0 > /dev/null")
+import platform
 
+# =========================================
+# Cek OS & install dependensi jika perlu
+# =========================================
+# Untuk Linux / Colab / Streamlit Cloud → apt-get
+if platform.system() != "Windows":
+    os.environ["OPENCV_VIDEOIO_PRIORITY_MSMF"] = "0"
+    os.system("apt-get update -y && apt-get install -y libgl1-mesa-glx libglib2.0-0 > /dev/null")
+
+# =========================================
+# Import library utama
+# =========================================
 import cv2
 cv2.setNumThreads(0)
 cv2.ocl.setUseOpenCL(False)
@@ -13,54 +23,67 @@ from tensorflow.keras.preprocessing import image
 import numpy as np
 from PIL import Image
 
-# ==============================
-# Load Models
-# ==============================
+# =========================================
+# Konfigurasi halaman Streamlit
+# =========================================
+st.set_page_config(page_title="🧠 Image Analyzer", page_icon="🧠", layout="wide")
+st.title("🧠 Dashboard Deteksi & Klasifikasi Gambar")
+
+# =========================================
+# Fungsi untuk load model YOLO & CNN
+# =========================================
 @st.cache_resource
 def load_models():
-    yolo_model = YOLO("model/Adila Khairunnisa_Laporan 4.pt")
-    classifier = load_model("model/Adila Khairunnisa_Laporan 2.h5", compile=False)
-    return yolo_model, classifier
+    try:
+        yolo_model = YOLO("model/Adila Khairunnisa_Laporan 4.pt")
+        classifier = load_model("model/Adila Khairunnisa_Laporan 2.h5", compile=False)
+        return yolo_model, classifier
+    except Exception as e:
+        st.error(f"⚠️ Gagal memuat model: {e}")
+        st.stop()
 
 yolo_model, classifier = load_models()
 
-# ==============================
-# UI
-# ==============================
-st.set_page_config(page_title="Image Analyzer", page_icon="🧠", layout="wide")
-st.title("🧠 Dashboard Deteksi & Klasifikasi Gambar")
-
+# =========================================
+# Sidebar Menu
+# =========================================
 menu = st.sidebar.radio("📊 Pilih Mode Analisis", [
     "Deteksi Buah (Apple & Tomato)",
     "Klasifikasi Penyakit Kulit"
 ])
 
+# =========================================
+# Upload gambar
+# =========================================
 uploaded_file = st.file_uploader("📤 Unggah Gambar", type=["jpg", "jpeg", "png"])
 
 if uploaded_file:
     img = Image.open(uploaded_file).convert("RGB")
-    st.image(img, caption="Gambar Diupload", use_container_width=True)
+    st.image(img, caption="📸 Gambar Diupload", use_container_width=True)
 
-    # ==============================
-    # MODE 1: Deteksi Buah
-    # ==============================
+    # ===================================================
+    # MODE 1: Deteksi Buah (menggunakan YOLO)
+    # ===================================================
     if menu == "Deteksi Buah (Apple & Tomato)":
         st.subheader("🍎 Deteksi Apple & Tomato")
+
         with st.spinner("Mendeteksi objek..."):
             results = yolo_model(img)
             result_img = results[0].plot()
-        st.image(result_img, caption="Hasil Deteksi", use_container_width=True)
 
+        st.image(result_img, caption="🔍 Hasil Deteksi", use_container_width=True)
+
+        # Ambil nama kelas hasil deteksi
         detected_classes = list(set([yolo_model.names[int(box.cls)] for box in results[0].boxes]))
         if detected_classes:
-            st.success("Deteksi selesai!")
+            st.success("✅ Deteksi selesai!")
             st.write("**Kelas terdeteksi:**", ", ".join(detected_classes))
         else:
-            st.warning("Tidak ada objek terdeteksi.")
+            st.warning("⚠️ Tidak ada objek terdeteksi.")
 
-    # ==============================
-    # MODE 2: Klasifikasi Penyakit Kulit
-    # ==============================
+    # ===================================================
+    # MODE 2: Klasifikasi Penyakit Kulit (menggunakan CNN)
+    # ===================================================
     elif menu == "Klasifikasi Penyakit Kulit":
         st.subheader("🩺 Klasifikasi Jenis Penyakit Kulit")
 
@@ -78,14 +101,14 @@ if uploaded_file:
         labels = ["Eczema", "Acne", "Milia", "Rosacea", "Keratosis", "Carcinoma"]
         predicted_label = labels[class_index]
 
-        st.success("Klasifikasi selesai!")
+        st.success("✅ Klasifikasi selesai!")
         st.markdown(f"### 🧩 Hasil: **{predicted_label}**")
         st.write(f"**Probabilitas:** {confidence:.2%}")
 
         # Menampilkan semua probabilitas kelas
-        st.markdown("#### Distribusi Prediksi:")
+        st.markdown("#### 📊 Distribusi Prediksi:")
         probs = {labels[i]: float(prediction[0][i]) for i in range(len(labels))}
         st.bar_chart(probs)
 
 else:
-    st.info("Silakan unggah gambar terlebih dahulu untuk memulai analisis.") 
+    st.info("📂 Silakan unggah gambar terlebih dahulu untuk memulai analisis.")
