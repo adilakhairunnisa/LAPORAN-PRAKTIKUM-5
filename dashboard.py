@@ -12,8 +12,8 @@ import time
 # ==========================
 @st.cache_resource
 def load_models():
-    yolo_path = "model/Adila_Khairunnisa_Laporan4.pt"  # model deteksi apel & tomat
-    h5_path = "model/Adila_Khairunnisa_Laporan2.h5"   # model klasifikasi penyakit kulit
+    yolo_path = "model/Adila_Khairunnisa_Laporan 4.pt"  # model deteksi apel & tomat
+    h5_path = "model/Adila_Khairunnisa_Laporan 2.h5"   # model klasifikasi penyakit kulit
     yolo_model = YOLO(yolo_path)
     classifier = tf.keras.models.load_model(h5_path)
     return yolo_model, classifier
