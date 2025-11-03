@@ -80,4 +80,4 @@ if uploaded_file:
         st.bar_chart(probs)
 
 else:
-    st.info("Silakan unggah gambar terlebih dahulu untuk memulai analisis.")
+    st.info("Silakan unggah gambar terlebih dahulu untuk memulai analisis.") 
