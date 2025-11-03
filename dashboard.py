@@ -1,4 +1,14 @@
 import streamlit as st
+import os
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+
+# pastikan OpenCV bisa diimport
+try:
+    import cv2
+except ImportError:
+    import subprocess
+    subprocess.run(["pip", "install", "opencv-python-headless==4.10.0.84"])
+    import cv2
 from ultralytics import YOLO
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
